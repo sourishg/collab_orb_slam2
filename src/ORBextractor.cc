@@ -1073,23 +1073,23 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
         resize(mask, cur_mask, Size(mvImagePyramid[i].cols, mvImagePyramid[i].rows));
         for (int j=0; j < allKeypoints_raw[i].size(); j++) {
             KeyPoint kp = allKeypoints_raw[i][j];
-            // int x = (int)kp.pt.x;
-            // int y = (int)kp.pt.y;
-            // // int radius = (int)(kp.size / 2.0);
-            // int radius = 10;
+            int x = (int)kp.pt.x;
+            int y = (int)kp.pt.y;
+            // int radius = (int)(kp.size / 2.0);
+            int radius = 10;
 
-            // int b = cur_mask.at<Vec3b>(y,x)[0];
-            // int g = cur_mask.at<Vec3b>(y,x)[1];
-            // int r = cur_mask.at<Vec3b>(y,x)[2];
-            // // printf("(%d, %d, %d)\n", b, g, r);
-            // if (g + r < 50 && b > 120 && ignore_dynamic_keypoints) {
-            //     // printf("Ignoring pixel at (%d, %d)\n", x, y);
-            //     continue;
-            // }
-            // if (g < 30 && b < 80 && b > 40 && r > 160 && ignore_dynamic_keypoints) {
-            //     // printf("Ignoring pixel at (%d, %d)\n", x, y);
-            //     continue;
-            // }
+            int b = cur_mask.at<Vec3b>(y,x)[0];
+            int g = cur_mask.at<Vec3b>(y,x)[1];
+            int r = cur_mask.at<Vec3b>(y,x)[2];
+            // printf("(%d, %d, %d)\n", b, g, r);
+            if (g + r < 50 && b > 120 && ignore_dynamic_keypoints) {
+                // printf("Ignoring pixel at (%d, %d)\n", x, y);
+                continue;
+            }
+            if (g < 30 && b < 80 && b > 40 && r > 160 && ignore_dynamic_keypoints) {
+                // printf("Ignoring pixel at (%d, %d)\n", x, y);
+                continue;
+            }
 
             // int count = 0;
             // int total = 0;
