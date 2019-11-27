@@ -1052,14 +1052,72 @@ void ORBextractor::operator()( InputArray _image, InputArray _mask, vector<KeyPo
         return;
 
     Mat image = _image.getMat();
+    Mat mask = _mask.getMat();
     assert(image.type() == CV_8UC1 );
 
     // Pre-compute the scale pyramid
     ComputePyramid(image);
 
-    vector < vector<KeyPoint> > allKeypoints;
-    ComputeKeyPointsOctTree(allKeypoints);
+    vector < vector<KeyPoint> > allKeypoints_raw;
+    ComputeKeyPointsOctTree(allKeypoints_raw);
     //ComputeKeyPointsOld(allKeypoints);
+
+    vector < vector<KeyPoint> > allKeypoints;
+    allKeypoints.resize(allKeypoints_raw.size());
+
+    bool ignore_dynamic_keypoints = true;
+
+    for (int i=0; i < allKeypoints_raw.size(); i++) {
+        // printf("%d, %d\n", mvImagePyramid[i].cols, mvImagePyramid[i].rows);
+        Mat cur_mask;
+        resize(mask, cur_mask, Size(mvImagePyramid[i].cols, mvImagePyramid[i].rows));
+        for (int j=0; j < allKeypoints_raw[i].size(); j++) {
+            KeyPoint kp = allKeypoints_raw[i][j];
+            // int x = (int)kp.pt.x;
+            // int y = (int)kp.pt.y;
+            // // int radius = (int)(kp.size / 2.0);
+            // int radius = 10;
+
+            // int b = cur_mask.at<Vec3b>(y,x)[0];
+            // int g = cur_mask.at<Vec3b>(y,x)[1];
+            // int r = cur_mask.at<Vec3b>(y,x)[2];
+            // // printf("(%d, %d, %d)\n", b, g, r);
+            // if (g + r < 50 && b > 120 && ignore_dynamic_keypoints) {
+            //     // printf("Ignoring pixel at (%d, %d)\n", x, y);
+            //     continue;
+            // }
+            // if (g < 30 && b < 80 && b > 40 && r > 160 && ignore_dynamic_keypoints) {
+            //     // printf("Ignoring pixel at (%d, %d)\n", x, y);
+            //     continue;
+            // }
+
+            // int count = 0;
+            // int total = 0;
+            // for (int k=x-radius; k < x+radius; k++) {
+            //     for (int l=y-radius; l < y+radius; l++) {
+            //         if (k < 0 || k >= cur_mask.cols || l < 0 || l >= cur_mask.rows) {
+            //             continue;
+            //         }
+            //         total++;
+            //         int b = cur_mask.at<Vec3b>(l,k)[0];
+            //         int g = cur_mask.at<Vec3b>(l,k)[1];
+            //         int r = cur_mask.at<Vec3b>(l,k)[2];
+            //         if (r + g < 50 && b > 120 && ignore_dynamic_keypoints) {
+            //             count++;
+            //         }
+            //         else if (g < 30 && b < 80 && b > 40 && r > 160 && ignore_dynamic_keypoints) {
+            //             // printf("Ignoring pixel at (%d, %d)\n", x, y);
+            //             count++;
+            //         }
+            //     }
+            // }
+            // if (count > 0.1 * total && ignore_dynamic_keypoints) {
+            //     // printf("%d\n", count);
+            //     continue;
+            // }
+            allKeypoints[i].push_back(kp);
+        }
+    }
 
     Mat descriptors;
 

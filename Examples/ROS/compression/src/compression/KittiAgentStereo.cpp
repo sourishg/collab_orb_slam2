@@ -53,21 +53,22 @@ float mFocalLength;
 
 
 
-void ExtractORB(int flag, const cv::Mat &im, std::vector<cv::KeyPoint> &vKeys, cv::Mat &descriptors)
+void ExtractORB(int flag, const cv::Mat &im, const cv::Mat &seg, std::vector<cv::KeyPoint> &vKeys, cv::Mat &descriptors)
 {
     if(flag==0)
     {
-        (*mpORBextractorLeft)(im,cv::Mat(),vKeys,descriptors);
+        (*mpORBextractorLeft)(im,seg,vKeys,descriptors);
     }
     else
     {
-        (*mpORBextractorRight)(im,cv::Mat(),vKeys,descriptors);
+        (*mpORBextractorRight)(im,seg,vKeys,descriptors);
     }
 
 }
 
 void LoadImagesKittiStereo(const std::string &strPathToSequence, std::vector<std::string> &vstrImageLeft,
-		std::vector<std::string> &vstrImageRight, std::vector<double> &vTimestamps)
+		std::vector<std::string> &vstrImageRight, std::vector<std::string> &vstrSegLeft,
+        std::vector<std::string> &vstrSegRight, std::vector<double> &vTimestamps)
 {
 	std::ifstream fTimes;
 	std::string strPathTimeFile = strPathToSequence + "/times.txt";
@@ -89,9 +90,14 @@ void LoadImagesKittiStereo(const std::string &strPathToSequence, std::vector<std
 	std::string strPrefixLeft = strPathToSequence + "/image_0/";
 	std::string strPrefixRight = strPathToSequence + "/image_1/";
 
+	std::string strPrefixSegLeft = strPathToSequence + "/seg_0/";
+    std::string strPrefixSegRight = strPathToSequence + "/seg_1/";
+
 	const int nTimes = vTimestamps.size();
 	vstrImageLeft.resize(nTimes);
 	vstrImageRight.resize(nTimes);
+	vstrSegLeft.resize(nTimes);
+    vstrSegRight.resize(nTimes);
 
 	for(int i=0; i<nTimes; i++)
 	{
@@ -99,6 +105,8 @@ void LoadImagesKittiStereo(const std::string &strPathToSequence, std::vector<std
 		ss << std::setfill('0') << std::setw(6) << i;
 		vstrImageLeft[i] = strPrefixLeft + ss.str() + ".png";
 		vstrImageRight[i] = strPrefixRight + ss.str() + ".png";
+		vstrSegLeft[i] = strPrefixSegLeft + ss.str() + ".png";
+        vstrSegRight[i] = strPrefixSegRight + ss.str() + ".png";
 	}
 }
 
@@ -207,14 +215,15 @@ int main(int argc, char **argv)
 	std::cout << "Loading image list from " << image_path << std::endl;
 	std::vector<double> vTimestamps;
 	std::vector<std::string> vCam0, vCam1;
-	LoadImagesKittiStereo(image_path, vCam0, vCam1, vTimestamps);
+	std::vector<std::string> vSeg0, vSeg1;
+	LoadImagesKittiStereo(image_path, vCam0, vCam1, vSeg0, vSeg1, vTimestamps);
 
 
 	size_t nImages = vCam0.size();
 
 	// Setup encoder
-	int imgWidth = 1241;
-	int imgHeight = 376;
+	int imgWidth = 640;
+	int imgHeight = 480;
 	int bufferSize = 1;
 	bool inter = true;
 	bool stereo = true;
@@ -240,15 +249,19 @@ int main(int argc, char **argv)
 
 
 	std::vector<cv::Mat> vImgLeft, vImgRight;
+	std::vector<cv::Mat> vSegLeft, vSegRight;
 	for( size_t imgId = 0; imgId < nImages; imgId++ )
 	{
 		// Read left and right images from file
 		cv::Mat imLeftDist = cv::imread(vCam0[imgId],cv::IMREAD_GRAYSCALE);
 		cv::Mat imRightDist = cv::imread(vCam1[imgId],cv::IMREAD_GRAYSCALE);
-
+		cv::Mat imLeftSeg = cv::imread(vSeg0[imgId],CV_LOAD_IMAGE_UNCHANGED);
+		cv::Mat imRightSeg = cv::imread(vSeg1[imgId],CV_LOAD_IMAGE_UNCHANGED);
 
 		vImgLeft.push_back(imLeftDist);
 		vImgRight.push_back(imRightDist);
+		vSegLeft.push_back(imLeftSeg);
+		vSegRight.push_back(imRightSeg);
 
 		if( imgId % 64 == 0)
 			std::cout << "Finished loading image " << imgId << std::endl;
@@ -267,6 +280,8 @@ int main(int argc, char **argv)
 		cv::Mat imLeftRect = vImgLeft[imgId];
 		cv::Mat imRightRect = vImgRight[imgId];
 
+		cv::Mat imSegLeft = vSegLeft[imgId];
+		cv::Mat imSegRight = vSegRight[imgId];
 
 		// Extract features
 		std::vector<cv::KeyPoint> keypointsLeft, keypointsRight;
@@ -275,8 +290,8 @@ int main(int argc, char **argv)
 
 
 		std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-		std::thread threadLeft(ExtractORB,0,imLeftRect, std::ref(keypointsLeft), std::ref(descriptorsLeft));
-		std::thread threadRight(ExtractORB,1,imRightRect, std::ref(keypointsRight), std::ref(descriptorsRight));
+		std::thread threadLeft(ExtractORB,0,imLeftRect,imSegLeft,std::ref(keypointsLeft), std::ref(descriptorsLeft));
+		std::thread threadRight(ExtractORB,1,imRightRect,imSegRight,std::ref(keypointsRight), std::ref(descriptorsRight));
 		threadLeft.join();
 		threadRight.join();
 

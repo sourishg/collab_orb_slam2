@@ -441,11 +441,11 @@ void System::SaveTrajectoryEuroC(const string &folder)
 void System::SaveTrajectoryKITTI(const string &folder)
 {
 	cout << endl << "Saving camera trajectory to " << folder << " ..." << endl;
-	if(mSensor==MONOCULAR)
-	{
-		cerr << "ERROR: SaveTrajectoryKITTI cannot be used for monocular." << endl;
-		return;
-	}
+	// if(mSensor==MONOCULAR)
+	// {
+	// 	cerr << "ERROR: SaveTrajectoryKITTI cannot be used for monocular." << endl;
+	// 	return;
+	// }
 
 
 	std::vector<MapHolder *> vpHolder = mpMapDatabase->GetMapHolders();
@@ -467,7 +467,7 @@ void System::SaveTrajectoryKITTI(const string &folder)
 		// After a loop closure the first keyframe might not be at the origin.
 		cv::Mat Two = vpKFs[0]->GetPoseInverse();
 
-		std::string filename = folder + "/KITTI_Robot_" + std::to_string(pHolder->nAgentId) + "_Trajectory.txt";
+		std::string filename = "/home/sourish/SLAM_project/collab_orb_slam2/KITTI_Robot_" + std::to_string(pHolder->nAgentId) + "_Trajectory.txt";
 
 		ofstream f;
 		f.open(filename.c_str());

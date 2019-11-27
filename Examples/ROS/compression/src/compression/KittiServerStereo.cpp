@@ -54,8 +54,8 @@ bool stereo = false;
 bool depth = false;
 
 int nlevels = 8;
-int imgWidth = 1241;
-int imgHeight = 376;
+int imgWidth = 640;
+int imgHeight = 480;
 
 std::map<int, std::mutex> mutexPool;
 std::map<int, std::thread> mThreadMap;
@@ -65,6 +65,7 @@ std::map<int, std::thread> mThreadMap;
 void signal_handler(int signal)
 {
 	//Save trajectory / stats etc.
+	SLAM->SaveTrajectoryKITTI("");
 	std::cout << "Shutting down" << std::endl;
 	SLAM->Shutdown();
 
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
 	// Setup ORB SLAM - make sure to use the correct settings file
 	std::string settings_path = vm["settings"].as<std::string>();
 	const string &strSettingsFile1 = settings_path + "/KITTI00-02.yaml";
-	const string &strSettingsFile2 = settings_path + "/KITTI04-12.yaml";
+	const string &strSettingsFile2 = settings_path + "/KITTI00-02.yaml";
 	SLAM = new CORB_SLAM2::System(voc_path);
 
 
@@ -211,8 +212,6 @@ int main(int argc, char **argv)
 	spinner.spin();
 
 	ros::waitForShutdown();
-
-
 
 	std::cout << "Finished" << std::endl;
 
